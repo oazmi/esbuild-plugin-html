@@ -91,10 +91,10 @@
 		"install": "npm"
 	},
 	"tasks": {
-		"build-dist": "deno run -A \"jsr:@oazmi/build-tools/cli/dist\" --config=\"./deno.json\"",
-		"build-docs": "deno run -A \"jsr:@oazmi/build-tools/cli/docs.ts\" --config=\"./deno.json\"",
-		"build-npm": "deno run -A \"jsr:@oazmi/build-tools/cli/npm.ts\" --config=\"./deno.json\"",
-		"build-npm-dist": "cd \"./npm/\" && npm run build-esm -- --platform=node && npm run build-esm-minify -- --platform=node",
+		"build-dist": "deno run -A \"jsr:@oazmi/build-tools@0.2.1/cli/dist\" --config=\"./deno.json\"",
+		"build-docs": "deno run -A \"jsr:@oazmi/build-tools@0.2.1/cli/docs\" --config=\"./deno.json\"",
+		"build-npm": "deno run -A \"jsr:@oazmi/build-tools@0.2.1/cli/npm\" --config=\"./deno.json\"",
+		"build-npm-dist": "cd \"./npm/\" && npm run build-dist",
 		"clean": "deno run -A \"./clean.ts\"",
 		"test": "deno test -A",
 		"publish-jsr": "deno publish"

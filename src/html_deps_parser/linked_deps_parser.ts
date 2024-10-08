@@ -1,6 +1,5 @@
-/** this module provides the {@link parseHtmlLinkedDeps} function that can extract the direct dependencies of an html file,
- * and replace the dependency html-elements with a placeholder elements,
- * so that they can be easily rediscovered when the links/contents to transpiled/bundled resources need to be injected back.
+/** this module provides the {@link parseHtmlLinkedDeps} function that can extract the direct dependencies of an html file, and replace the dependency
+ * html-elements with a placeholder elements, so that they can be easily rediscovered when the links/contents to transpiled/bundled resources need to be injected back.
  * 
  * @module
 */
@@ -104,7 +103,7 @@ export interface ParsedHtmlLinkedDependencies {
 	depsLinked: HtmlLinkedDependencies
 }
 
-/** returns the dependencies of an html file */
+/** returns the linked dependencies of an html file. */
 export const parseHtmlLinkedDeps = (html_content: string, config: parseHtmlLinkedDepsConfig = {}): ParsedHtmlLinkedDependencies => {
 	const
 		{ path: html_path = "./index.html" } = config,
@@ -120,7 +119,7 @@ export const parseHtmlLinkedDeps = (html_content: string, config: parseHtmlLinke
 					resource_url: URL = resolveAsUrl(elem.getAttribute(attribute)!, dir_url),
 					id = resource_url.href,
 					resource_elem = doc.createElement(resource_element_html_tag)
-				// we also replace the original reference element with a `<res-link rid="${resource_url.href}"></res>` element, so that later on,
+				// we also replace the original reference element with a `<res-link rid="${resource_url.href}"></res-link>` element, so that later on,
 				// we could come back after the transpilation/bundling process and insert back the original element, with the exception of having
 				// its reference `attribute` replaced with the path of the transpiled/bundled resource.
 				copyElementAttributes(elem as any, resource_elem as any)

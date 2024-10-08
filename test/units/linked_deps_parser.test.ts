@@ -53,7 +53,7 @@ Deno.test("parseHtmlLinkedDeps - Icon and base64 images and preserving attribute
 })
 
 // Unit Test 3: No dependencies and DTD tag preservation
-Deno.test("parseHtmlLinkedDeps - No dependencies", () => {
+Deno.test("parseHtmlLinkedDeps - No dependencies and DTD tag preservation", () => {
 	const htmlContent = `<!DOCTYPE html PUBLIC "HelloSystems" "IBM MainFrame">
 <html>
 	<head>

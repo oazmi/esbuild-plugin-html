@@ -20,7 +20,7 @@ export const
 	resource_element_id_uri_scheme = "inline://" as const
 
 export interface HtmlDependencyInlined extends HtmlDependency {
-	/** the content block of the resource, extracted through `element.textContent` of the original inline resource element. */
+	/** the content block of the resource, extracted through `element.innerHTML` of the original inline resource element. */
 	content: Uint8Array
 	/** the path to the diectory in which the inline resource's html file exists.
 	 * this is information is necessary when the inline resource makes a relative reference in an import statement.
@@ -50,7 +50,7 @@ export interface HtmlInlinedDependencies {
 	svg: Array<HtmlDependencyInlined>
 }
 
-/** a descriptor of which html elements to select and extract their inlined content (`element.textContent`). */
+/** a descriptor of which html elements to select and extract their inlined content (`element.innerHTML`). */
 interface InlinedDependencySelector {
 	/** the css-query selector to pick out the inlined dependency element.
 	 * examples: `"script:not([src])"`, or `"style"`
@@ -128,7 +128,8 @@ export const parseHtmlInlinedDeps = (html_content: string, config: parseHtmlInli
 		.map(([dep_type_key, { selector }]) => {
 			const all_deps_of_a_certain_type: HtmlDependencyInlined[] = [...doc.querySelectorAll(selector)].map((elem) => {
 				const
-					resource_content: Uint8Array = text_encoder.encode(elem.textContent),
+					// the reason why we use `elem.innerHTML` instead of `elem.textContent` is because the xml-blocks inside of an svg block will not get parsed by the latter method.
+					resource_content: Uint8Array = text_encoder.encode(elem.innerHTML),
 					id: HtmlDependencyInlined["id"] = `${resource_element_id_uri_scheme}${inlined_resource_id_counter++}`,
 					resource_elem = doc.createElement(resource_element_html_tag)
 				// we also replace the original reference element with a `<res-inline hash="inline://${unique_integer}"></res-inline>` element, so that later on,
