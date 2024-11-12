@@ -37,11 +37,11 @@ export interface HtmlDependencyInlined extends HtmlDependency {
  * ## Table of Direct HTML Inlined Dependencies
  * ### Supported dependencies
  * 
- * | key   | description            | query selector                 | example of selectable element                       |
- * |-------|------------------------|--------------------------------|-----------------------------------------------------|
- * | `js`  | Inline JavaScript      | `script:not([src])`            | `<script>console.log("Hello World")</script>`       |
- * | `css` | Inline CSS             | `style`                        | `<style>body { ... }</style>`                       |
- * | `svg` | Embedded SVG Elements  | `svg`                          | `<svg xmlns="http://www.w3.org/2000/svg">...</svg>` |
+ * | key   | description            | query selector      | example of selectable element                       |
+ * |-------|------------------------|---------------------|-----------------------------------------------------|
+ * | `js`  | Inline JavaScript      | `script:not([src])` | `<script>console.log("Hello World")</script>`       |
+ * | `css` | Inline CSS             | `style`             | `<style>body { ... }</style>`                       |
+ * | `svg` | Embedded SVG Elements  | `svg`               | `<svg xmlns="http://www.w3.org/2000/svg">...</svg>` |
  * 
 */
 export interface HtmlInlinedDependencies {

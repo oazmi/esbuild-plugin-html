@@ -68,10 +68,10 @@ Deno.test("parseHtmlInlinedDeps - Empty inline content and DTD tag preservation"
 
 	assertEquals(depsInlined.js.length, 1)
 	assertEquals(text_decoder.decode(depsInlined.js[0].content), "")
-	assertEquals(depsInlined.js[0].path, new URL("jsr:@scope/lib@0.1.0/path/to/"))
+	assertEquals(depsInlined.js[0].path, new URL("jsr:/@scope/lib@0.1.0/path/to/"))
 	assertEquals(depsInlined.css.length, 1)
 	assertEquals(text_decoder.decode(depsInlined.css[0].content), "")
-	assertEquals(depsInlined.css[0].path, new URL("jsr:@scope/lib@0.1.0/path/to/"))
+	assertEquals(depsInlined.css[0].path, new URL("jsr:/@scope/lib@0.1.0/path/to/"))
 	assertEquals(html.includes(`<res-inline rid="${rid1}"></res-inline>`), true)
 	assertEquals(html.includes(`<res-inline rid="${rid2}"></res-inline>`), true)
 	assertEquals(html.startsWith(`<!DOCTYPE html PUBLIC "HelloSystems" "IBM MainFrame">\n`), true, "the DTD doctype string was not preserved")

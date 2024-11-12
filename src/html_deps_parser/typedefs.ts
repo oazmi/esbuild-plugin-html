@@ -1,4 +1,4 @@
-import type {HtmlDependencyLinked} from "./linked_deps_parser.ts"
+import type { HtmlDependencyLinked } from "./linked_deps_parser.ts"
 
 /** a generic dependency of and HTML file. see the subtypes {@link HtmlDependencyLinked} and {@link HtmlInlinedDependency} for the concrete definitions. */
 export interface HtmlDependency {
