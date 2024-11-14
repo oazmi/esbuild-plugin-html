@@ -1,6 +1,7 @@
 import { assertEquals } from "jsr:@std/assert"
 import { parseHtmlLinkedDeps } from "../../src/html_deps_parser/linked_deps_parser.ts"
 
+
 // Unit Test 1: Parsing relative and absolute JS dependencies
 Deno.test("parseHtmlLinkedDeps - JS dependencies", () => {
 	const htmlContent = `<html>
@@ -20,9 +21,9 @@ Deno.test("parseHtmlLinkedDeps - JS dependencies", () => {
 	const { depsLinked, html } = parseHtmlLinkedDeps(htmlContent, { path: "c:/path/to/index.html" })
 
 	assertEquals(depsLinked, expectedDeps, "the list of linked dependencies does not match expectation")
-	assertEquals(html.includes(`<res-link rid="${expectedDeps.js[0].id}">`), true, "a placeholder reference to the linked resource was not added")
-	assertEquals(html.includes(`<res-link rid="${expectedDeps.js[1].id}">`), true, "a placeholder reference to the linked resource was not added")
-	assertEquals(html.includes(`<script src=`), false, "the original resource element still exists, but it was supposed to be replaced by the `<res-link>` element")
+	assertEquals(html.includes(`<script res-src-link="${expectedDeps.js[0].id}">`), true, "a placeholder reference to the linked resource was not added")
+	assertEquals(html.includes(`<script res-src-link="${expectedDeps.js[1].id}">`), true, "a placeholder reference to the linked resource was not added")
+	assertEquals(html.includes(`src=`), false, "the original resource element's source attribute still exists, but it was supposed to be replaced by the `res-src-link` attribute")
 })
 
 // Unit Test 2: Parsing icon and base64-encoded images and preserving attributes
@@ -46,10 +47,10 @@ Deno.test("parseHtmlLinkedDeps - Icon and base64 images and preserving attribute
 	const { depsLinked, html } = parseHtmlLinkedDeps(htmlContent, { path: "z:/path/to/pages/index.html" })
 
 	assertEquals(depsLinked, expectedDeps, "the list of linked dependencies does not match expectation")
-	assertEquals(html.includes(`<res-link ${extra_attributes} rid="${expectedDeps.ico[0].id}">`), true, "a placeholder reference to the linked resource was not added")
-	assertEquals(html.includes(`<res-link rid="${expectedDeps.img[0].id}">`), true, "a placeholder reference to the linked resource was not added")
-	assertEquals(html.includes(`<link`), false, "the original resource element still exists, but it was supposed to be replaced by the `<res-link>` element")
-	assertEquals(html.includes(`<img`), false, "the original resource element still exists, but it was supposed to be replaced by the `<res-link>` element")
+	assertEquals(html.includes(`<link ${extra_attributes} res-src-link="${expectedDeps.ico[0].id}">`), true, "a placeholder reference to the linked resource was not added")
+	assertEquals(html.includes(`<img res-src-link="${expectedDeps.img[0].id}">`), true, "a placeholder reference to the linked resource was not added")
+	assertEquals(html.includes(`href=`), false, "the original resource element's source attribute still exists, but it was supposed to be replaced by the `res-src-link` attribute")
+	assertEquals(html.includes(`src=`), false, "the original resource element's source attribute still exists, but it was supposed to be replaced by the `res-src-link` attribute")
 })
 
 // Unit Test 3: No dependencies and DTD tag preservation
@@ -58,9 +59,13 @@ Deno.test("parseHtmlLinkedDeps - No dependencies and DTD tag preservation", () =
 <html>
 	<head>
 		<title>Test Page</title>
+		<link rel="icon">
+		<style></style>
+		<script></script>
 	</head>
 	<body>
 		<p>No resources linked here.</p>
+		<img>
 	</body>
 </html>`
 
@@ -69,7 +74,7 @@ Deno.test("parseHtmlLinkedDeps - No dependencies and DTD tag preservation", () =
 	const { depsLinked, html } = parseHtmlLinkedDeps(htmlContent, { path: "/path/to/index.html" })
 
 	assertEquals(depsLinked, expectedDeps, "the empty list of linked dependencies does not match expectation")
-	assertEquals(html.includes("<res-link"), false, "there should have been no `<res-link>` resource elements, since there were no dependencies")
+	assertEquals(html.includes("res-src-link"), false, "there should have been no `res-src-link` resource element attributes, since there were no linked dependencies")
 	assertEquals(html.startsWith(`<!DOCTYPE html PUBLIC "HelloSystems" "IBM MainFrame">\n`), true, "the DTD doctype string was not preserved")
 })
 
@@ -97,9 +102,9 @@ Deno.test("parseHtmlLinkedDeps - Mixed dependencies", () => {
 	const { depsLinked, html } = parseHtmlLinkedDeps(htmlContent, { path: "k:/path/to/index.html" })
 
 	assertEquals(depsLinked, expectedDeps, "the empty list of linked dependencies does not match expectation")
-	assertEquals(html.includes(`<res-link rid="${expectedDeps.js[0].id}">`), true, "a placeholder reference to the linked resource was not added")
-	assertEquals(html.includes(`<res-link rel="stylesheet" rid="${expectedDeps.css[0].id}">`), true, "a placeholder reference to the linked resource was not added")
-	assertEquals(html.includes(`<res-link rid="${expectedDeps.img[0].id}">`), true, "a placeholder reference to the linked resource was not added")
-	assertEquals(html.includes(`<res-link rel="icon" rid="${expectedDeps.ico[0].id}">`), true, "a placeholder reference to the linked resource was not added")
+	assertEquals(html.includes(`<script res-src-link="${expectedDeps.js[0].id}">`), true, "a placeholder reference to the linked resource was not added")
+	assertEquals(html.includes(`<link rel="stylesheet" res-src-link="${expectedDeps.css[0].id}">`), true, "a placeholder reference to the linked resource was not added")
+	assertEquals(html.includes(`<img res-src-link="${expectedDeps.img[0].id}">`), true, "a placeholder reference to the linked resource was not added")
+	assertEquals(html.includes(`<link rel="icon" res-src-link="${expectedDeps.ico[0].id}">`), true, "a placeholder reference to the linked resource was not added")
 	assertEquals(html.startsWith(`<!DOCTYPE html>\n`), true, "the DTD doctype string was not preserved")
 })

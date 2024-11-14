@@ -4,18 +4,16 @@
  * @module
 */
 
-import { DOMParser, resolveAsUrl } from "../deps.ts"
+import { DOMParser, object_entries, resolveAsUrl } from "../deps.ts"
 import { getDirUrlFromFile } from "../funcdefs.ts"
 import type { AbsolutePath } from "../typedefs.ts"
-import { copyElementAttributes, stringifyHtmlDocument } from "./funcdefs.ts"
+import { stringifyHtmlDocument } from "./funcdefs.ts"
 import type { HtmlDependency } from "./typedefs.ts"
 
 
 export const
-	// the html element tag name of what we swap our resource elements with
-	resource_element_html_tag = "res-link" as const,
 	// the name of the attribute that will carry the information about the resource's unique id
-	resource_element_id_attr = "rid" as const
+	resource_element_src_attr = "res-src-link" as const
 
 export interface HtmlDependencyLinked extends HtmlDependency {
 	/** the url of the resource. */
@@ -108,32 +106,30 @@ export const parseHtmlLinkedDeps = (html_content: string, config: parseHtmlLinke
 	const
 		{ path: html_path = "./index.html" } = config,
 		dir_url = getDirUrlFromFile(html_path),
-		doc = new DOMParser().parseFromString(html_content, "text/html")
+		doc = new DOMParser().parseFromString(html_content, "text/html"),
+		depsLinked: HtmlLinkedDependencies = {} as any
 
-	const html_linked_deps = Object.fromEntries((Object
-		.entries(htmlLinkedDependencySelectors) as Array<[keyof HtmlLinkedDependencies, LinkedDependencySelector]>)
-		.map(([dep_type_key, { selector, attribute }]) => {
-			const all_deps_of_a_certain_type: HtmlDependencyLinked[] = [...doc.querySelectorAll(selector)].map((elem) => {
-				const
-					// below, `dir_url` is used as the base path if `elem.getAttribute(attribute)` is a relative link. but if it is absolute, then `html_dir_url` will not be part of the base path.
-					resource_url: URL = resolveAsUrl(elem.getAttribute(attribute)!, dir_url),
-					id = resource_url.href,
-					resource_elem = doc.createElement(resource_element_html_tag)
-				// we also replace the original reference element with a `<res-link rid="${resource_url.href}"></res-link>` element, so that later on,
-				// we could come back after the transpilation/bundling process and insert back the original element, with the exception of having
-				// its reference `attribute` replaced with the path of the transpiled/bundled resource.
-				copyElementAttributes(elem as any, resource_elem as any)
-				resource_elem.removeAttribute(attribute)
-				resource_elem.setAttribute(resource_element_id_attr, id)
-				elem.replaceWith(resource_elem)
-				return { id, url: resource_url }
-			})
-			return [dep_type_key, all_deps_of_a_certain_type] satisfies [keyof HtmlLinkedDependencies, Array<HtmlDependencyLinked>]
-		})) as unknown as HtmlLinkedDependencies
+	for (const [dep_type_key, { selector, attribute }] of object_entries(htmlLinkedDependencySelectors) as Array<[keyof HtmlLinkedDependencies, LinkedDependencySelector]>) {
+		const all_deps_of_a_certain_type: Array<HtmlDependencyLinked> = []
+		depsLinked[dep_type_key] = all_deps_of_a_certain_type
+		for (const elem of doc.querySelectorAll(selector)) {
+			// first we ensure that `elem` has not already been marked as a linked dependency, because if it has been, then we'll have to skip it
+			if (elem.hasAttribute(resource_element_src_attr)) { continue }
+			const
+				// below, `dir_url` is used as the base path if `elem.getAttribute(attribute)` is a relative link. but if it is absolute, then `html_dir_url` will not be part of the base path.
+				resource_url: URL = resolveAsUrl(elem.getAttribute(attribute)!, dir_url),
+				id: HtmlDependencyLinked["id"] = resource_url.href
+			// we remove the original source link `attribute`, and replace it with our custom `"res-src-link"` attribute.
+			// during the uparsing stage, we will have to do the reverse and set the original `attribute` to the resolved `url` of this dependency.
+			elem.removeAttribute(attribute)
+			elem.setAttribute(resource_element_src_attr, id)
+			all_deps_of_a_certain_type.push({ id, url: resource_url })
+		}
+	}
 
 	return {
 		html: stringifyHtmlDocument(doc as any),
-		depsLinked: html_linked_deps,
+		depsLinked,
 	}
 }
 
