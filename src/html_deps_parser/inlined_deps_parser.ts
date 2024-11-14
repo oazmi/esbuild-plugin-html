@@ -4,20 +4,18 @@
  * @module
 */
 
-import { DOMParser } from "../deps.ts"
+import { DOMParser, object_entries } from "../deps.ts"
 import { getDirUrlFromFile } from "../funcdefs.ts"
 import type { AbsolutePath } from "../typedefs.ts"
-import { copyElementAttributes, stringifyHtmlDocument } from "./funcdefs.ts"
+import { stringifyHtmlDocument } from "./funcdefs.ts"
 import type { HtmlDependency } from "./typedefs.ts"
 
 
 export const
-	// the html element tag name of what we swap our resource elements with
-	resource_element_html_tag = "res-inline" as const,
 	// the name of the attribute that will carry the information about the resource's unique id
-	resource_element_id_attr = "rid" as const,
+	resource_element_src_attr = "res-src-inline" as const,
 	// this is the uri scheme that we will use for inlined resources' id
-	resource_element_id_uri_scheme = "inline://" as const
+	resource_element_src_uri_scheme = "inline://" as const
 
 export interface HtmlDependencyInlined extends HtmlDependency {
 	/** the content block of the resource, extracted through `element.innerHTML` of the original inline resource element. */
@@ -27,7 +25,7 @@ export interface HtmlDependencyInlined extends HtmlDependency {
 	 * this value is derived from the {@link parseHtmlInlinedDepsConfig.path} option passed to the {@link parseHtmlInlinedDeps} parsing function.
 	*/
 	path: URL
-	id: `${typeof resource_element_id_uri_scheme}${number}`
+	id: `${typeof resource_element_src_uri_scheme}${number}`
 }
 
 /** this interface defines the inlined dependencies of an html file.
@@ -63,7 +61,6 @@ const htmlInlinedDependencySelectors: Record<keyof HtmlInlinedDependencies, Inli
 	css: { selector: "style" },
 	svg: { selector: "svg" },
 }
-
 
 interface parseHtmlInlinedDepsConfig {
 	/** the absolute path of the html file that you are providing the contents of. <br>
@@ -121,30 +118,28 @@ export const parseHtmlInlinedDeps = (html_content: string, config: parseHtmlInli
 	const
 		{ path: html_path = "./index.html" } = config,
 		dir_url = getDirUrlFromFile(html_path),
-		doc = new DOMParser().parseFromString(html_content, "text/html")
+		doc = new DOMParser().parseFromString(html_content, "text/html"),
+		depsInlined: HtmlInlinedDependencies = {} as any
 
-	const html_inlined_deps = Object.fromEntries((Object
-		.entries(htmlInlinedDependencySelectors) as Array<[keyof HtmlInlinedDependencies, InlinedDependencySelector]>)
-		.map(([dep_type_key, { selector }]) => {
-			const all_deps_of_a_certain_type: HtmlDependencyInlined[] = [...doc.querySelectorAll(selector)].map((elem) => {
-				const
-					// the reason why we use `elem.innerHTML` instead of `elem.textContent` is because the xml-blocks inside of an svg block will not get parsed by the latter method.
-					resource_content: Uint8Array = text_encoder.encode(elem.innerHTML),
-					id: HtmlDependencyInlined["id"] = `${resource_element_id_uri_scheme}${inlined_resource_id_counter++}`,
-					resource_elem = doc.createElement(resource_element_html_tag)
-				// we also replace the original reference element with a `<res-inline hash="inline://${unique_integer}"></res-inline>` element, so that later on,
-				// we could come back after the transpilation/bundling process and insert back the original element.
-				copyElementAttributes(elem as any, resource_elem as any)
-				resource_elem.setAttribute(resource_element_id_attr, id)
-				elem.replaceWith(resource_elem)
-				return { id, content: resource_content, path: dir_url }
-			})
-			return [dep_type_key, all_deps_of_a_certain_type] satisfies [keyof HtmlInlinedDependencies, Array<HtmlDependencyInlined>]
-		})) as unknown as HtmlInlinedDependencies
+	for (const [dep_type_key, { selector }] of object_entries(htmlInlinedDependencySelectors) as Array<[keyof HtmlInlinedDependencies, InlinedDependencySelector]>) {
+		const all_deps_of_a_certain_type: Array<HtmlDependencyInlined> = []
+		depsInlined[dep_type_key] = all_deps_of_a_certain_type
+		for (const elem of doc.querySelectorAll(selector)) {
+			// first we ensure that `elem` has not already been marked as an inline dependency, because if it has been, then we'll have to skip it
+			if (elem.hasAttribute(resource_element_src_attr)) { continue }
+			const
+				// the reason why we use `elem.innerHTML` instead of `elem.textContent` is because the xml-blocks inside of an svg block will not get parsed by the latter method.
+				resource_content: Uint8Array = text_encoder.encode(elem.innerHTML),
+				id: HtmlDependencyInlined["id"] = `${resource_element_src_uri_scheme}${inlined_resource_id_counter++}`
+			elem.innerHTML = ""
+			elem.setAttribute(resource_element_src_attr, id)
+			all_deps_of_a_certain_type.push({ id, path: dir_url, content: resource_content })
+		}
+	}
 
 	return {
 		html: stringifyHtmlDocument(doc as any),
-		depsInlined: html_inlined_deps,
+		depsInlined,
 	}
 }
 

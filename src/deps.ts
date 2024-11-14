@@ -2,6 +2,7 @@ import { getUriScheme, resolvePathFactory } from "jsr:@oazmi/kitchensink@0.8.4/p
 
 
 export { DOMParser } from "jsr:@b-fuze/deno-dom@0.1.48"
+export { object_entries, object_fromEntries, object_keys, object_values } from "jsr:@oazmi/kitchensink@0.8.4/builtin_aliases_deps"
 export { getUriScheme, joinPaths, resolveAsUrl } from "jsr:@oazmi/kitchensink@0.8.4/pathman"
 // TODO: in the future, we will have to wrap `getUriScheme` and export a different `getUriScheme` that understands our custom `inline://` uri-scheme
 

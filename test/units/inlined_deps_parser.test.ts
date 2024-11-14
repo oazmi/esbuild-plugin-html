@@ -1,6 +1,7 @@
 import { assertEquals } from "jsr:@std/assert"
 import { parseHtmlInlinedDeps } from "../../src/html_deps_parser/inlined_deps_parser.ts"
 
+
 const text_encoder = new TextEncoder()
 const text_decoder = new TextDecoder()
 
@@ -38,9 +39,9 @@ Deno.test("parseHtmlInlinedDeps - Inline JavaScript, CSS, and SVG parsing", () =
 	assertEquals(rid1 !== rid2, true, "the id of each resource must be unique (non-repeating)")
 	assertEquals(rid1 !== rid3, true, "the id of each resource must be unique (non-repeating)")
 	assertEquals(rid2 !== rid3, true, "the id of each resource must be unique (non-repeating)")
-	assertEquals(html.includes(`<res-inline type="module" defer="" rid="${rid1}"></res-inline>`), true)
-	assertEquals(html.includes(`<res-inline rid="${rid2}"></res-inline>`), true)
-	assertEquals(html.includes(`<res-inline xmlns="http://www.w3.org/2000/svg" viewbox="0 0 100 100" rid="${rid3}"></res-inline>`), true)
+	assertEquals(html.includes(`<script type="module" defer="" res-src-inline="${rid1}"></script>`), true)
+	assertEquals(html.includes(`<style res-src-inline="${rid2}"></style>`), true)
+	assertEquals(html.includes(`<svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 100 100" res-src-inline="${rid3}"></svg>`), true)
 })
 
 // Unit Test 2: Empty inline content and DTD tag preservation
@@ -72,8 +73,8 @@ Deno.test("parseHtmlInlinedDeps - Empty inline content and DTD tag preservation"
 	assertEquals(depsInlined.css.length, 1)
 	assertEquals(text_decoder.decode(depsInlined.css[0].content), "")
 	assertEquals(depsInlined.css[0].path, new URL("jsr:/@scope/lib@0.1.0/path/to/"))
-	assertEquals(html.includes(`<res-inline rid="${rid1}"></res-inline>`), true)
-	assertEquals(html.includes(`<res-inline rid="${rid2}"></res-inline>`), true)
+	assertEquals(html.includes(`<script res-src-inline="${rid1}"></script>`), true)
+	assertEquals(html.includes(`<style res-src-inline="${rid2}"></style>`), true)
 	assertEquals(html.startsWith(`<!DOCTYPE html PUBLIC "HelloSystems" "IBM MainFrame">\n`), true, "the DTD doctype string was not preserved")
 })
 
@@ -94,5 +95,5 @@ Deno.test("parseHtmlInlinedDeps - No inline dependencies", () => {
 	assertEquals(result.depsInlined.js.length, 0)
 	assertEquals(result.depsInlined.css.length, 0)
 	assertEquals(result.depsInlined.svg.length, 0)
-	assertEquals(result.html.includes("<res-inline"), false)
+	assertEquals(result.html.includes("res-src-inline"), false)
 })
