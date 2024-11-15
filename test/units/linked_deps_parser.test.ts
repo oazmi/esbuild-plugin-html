@@ -1,5 +1,7 @@
 import { assertEquals } from "jsr:@std/assert"
-import { parseHtmlLinkedDeps, type HtmlLinkedDependencies } from "../../src/html_deps_parser/linked_deps_parser.ts"
+import { DOMParser } from "../../src/deps.ts"
+import { stringifyHtmlDocument } from "../../src/html_deps_parser/funcdefs.ts"
+import { parseHtmlLinkedDeps, unparseHtmlLinkedDeps, type HtmlLinkedDependencies } from "../../src/html_deps_parser/linked_deps_parser.ts"
 
 
 // Unit Test 1: Parsing relative and absolute JS dependencies
@@ -132,4 +134,31 @@ Deno.test("parseHtmlLinkedDeps - Mixed dependencies", () => {
 	assertEquals(html.includes(`<img res-src-link="${rid3}">`), true, "a placeholder reference to the linked resource was not added")
 	assertEquals(html.includes(`<link rel="icon" res-src-link="${rid4}">`), true, "a placeholder reference to the linked resource was not added")
 	assertEquals(html.startsWith(`<!DOCTYPE html>\n`), true, "the DTD doctype string was not preserved")
+})
+
+// Unit Test 5: Linked dependency unparsing
+Deno.test("unparseHtmlLinkedDeps - Linked dependency unparsing", () => {
+	const htmlContent = `<html>
+<head>
+	<script src="./app.js"></script>
+	<link rel="stylesheet" href="https://cdn.example.com/styles.css">
+	<style>
+		body { background-color: #fff; }
+		img {
+			max-width: min(100%, 100vw);
+		}
+	</style>
+	<link rel="icon" href="https://example.com/favicon.ico">
+</head>
+<body>
+	<img src="../assets/logo.png">
+</body>
+</html>`
+
+	const normalized_htmlContent = stringifyHtmlDocument(new DOMParser().parseFromString(htmlContent, "text/html") as any)
+		.replace("./app.js", "file:///f:/path/to/app.js")
+		.replace("../assets/logo.png", "file:///f:/path/assets/logo.png")
+	const { depsLinked, html } = parseHtmlLinkedDeps(htmlContent, { path: "f:/path/to/index.html" })
+	const merged_back_htmlContent = unparseHtmlLinkedDeps(html, depsLinked)
+	assertEquals(merged_back_htmlContent, normalized_htmlContent)
 })

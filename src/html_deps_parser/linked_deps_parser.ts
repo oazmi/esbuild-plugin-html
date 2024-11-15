@@ -137,5 +137,23 @@ export const parseHtmlLinkedDeps = (html_content: string, config: parseHtmlLinke
 	}
 }
 
-// TODO: implement `unparseHtmlLinkedDeps`, which should place back the dependencies specified in a `ParsedHtmlLinkedDependencies` to the contents of an html file
+// DONE: implement `unparseHtmlLinkedDeps`, which should place back the dependencies specified in a `ParsedHtmlLinkedDependencies` to the contents of an html file
+/** merges inline dependency resources back into an html file's contents, and returns it back. */
+export const unparseHtmlLinkedDeps = (html_content: ParsedHtmlLinkedDependencies["html"], linked_deps: ParsedHtmlLinkedDependencies["depsLinked"]): string => {
+	const doc = new DOMParser().parseFromString(html_content, "text/html")
 
+	for (const [dep_type_key, all_deps_of_a_certain_type] of object_entries(linked_deps) as Array<[keyof typeof linked_deps, Array<HtmlDependencyLinked>]>) {
+		const { attribute } = htmlLinkedDependencySelectors[dep_type_key]
+		for (const linked_dep of all_deps_of_a_certain_type) {
+			const
+				{ url, id } = linked_dep,
+				selector = `*\[${resource_element_src_attr}=\"${id}\"\]`,
+				elem = doc.querySelector(selector)
+			if (!elem) { throw new Error(`did not find linked resource id: "${id}" in the provided html content`) }
+			elem.removeAttribute(resource_element_src_attr)
+			elem.setAttribute(attribute, url.href)
+		}
+	}
+
+	return stringifyHtmlDocument(doc as any)
+}
