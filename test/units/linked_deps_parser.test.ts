@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert"
-import { parseHtmlLinkedDeps } from "../../src/html_deps_parser/linked_deps_parser.ts"
+import { parseHtmlLinkedDeps, type HtmlLinkedDependencies } from "../../src/html_deps_parser/linked_deps_parser.ts"
 
 
 // Unit Test 1: Parsing relative and absolute JS dependencies
@@ -11,18 +11,24 @@ Deno.test("parseHtmlLinkedDeps - JS dependencies", () => {
 	</head>
 </html>`
 
-	const expectedDeps = {
+	const { depsLinked, html } = parseHtmlLinkedDeps(htmlContent, { path: "c:/path/to/index.html" })
+	const rid1 = depsLinked.js[0].id
+	const rid2 = depsLinked.js[1].id
+
+	assertEquals(rid1.startsWith("link://"), true)
+	assertEquals(rid2.startsWith("link://"), true)
+	assertEquals(rid1 !== rid2, true, "the id of each resource must be unique (non-repeating)")
+
+	const expectedDeps: HtmlLinkedDependencies = {
 		css: [], img: [], ico: [], js: [
-			{ id: "file:///c:/path/to/app.js", url: new URL("file:///c:/path/to/app.js") },
-			{ id: "https://cdn.example.com/lib.js", url: new URL("https://cdn.example.com/lib.js") }
+			{ id: rid1, url: new URL("file:///c:/path/to/app.js") },
+			{ id: rid2, url: new URL("https://cdn.example.com/lib.js") }
 		],
 	}
 
-	const { depsLinked, html } = parseHtmlLinkedDeps(htmlContent, { path: "c:/path/to/index.html" })
-
 	assertEquals(depsLinked, expectedDeps, "the list of linked dependencies does not match expectation")
-	assertEquals(html.includes(`<script res-src-link="${expectedDeps.js[0].id}">`), true, "a placeholder reference to the linked resource was not added")
-	assertEquals(html.includes(`<script res-src-link="${expectedDeps.js[1].id}">`), true, "a placeholder reference to the linked resource was not added")
+	assertEquals(html.includes(`<script res-src-link="${rid1}">`), true, "a placeholder reference to the linked resource was not added")
+	assertEquals(html.includes(`<script res-src-link="${rid2}">`), true, "a placeholder reference to the linked resource was not added")
 	assertEquals(html.includes(`src=`), false, "the original resource element's source attribute still exists, but it was supposed to be replaced by the `res-src-link` attribute")
 })
 
@@ -35,20 +41,35 @@ Deno.test("parseHtmlLinkedDeps - Icon and base64 images and preserving attribute
 	</head>
 	<body><div id="root">
 		<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...">
+		<img src="https://google.com/logo.svg">
 	</div></body>
 </html>`
 
-	const expectedDeps = {
+	const { depsLinked, html } = parseHtmlLinkedDeps(htmlContent, { path: "z:/path/to/pages/index.html" })
+	const rid1 = depsLinked.img[0].id
+	const rid2 = depsLinked.img[1].id
+	const rid3 = depsLinked.ico[0].id
+
+	assertEquals(rid1.startsWith("link://"), true)
+	assertEquals(rid2.startsWith("link://"), true)
+	assertEquals(rid3.startsWith("link://"), true)
+	assertEquals(rid1 !== rid2, true, "the id of each resource must be unique (non-repeating)")
+	assertEquals(rid1 !== rid3, true, "the id of each resource must be unique (non-repeating)")
+	assertEquals(rid2 !== rid3, true, "the id of each resource must be unique (non-repeating)")
+
+	const expectedDeps: HtmlLinkedDependencies = {
 		js: [], css: [],
-		img: [{ id: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...", url: new URL("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...") }],
-		ico: [{ id: "file:///z:/path/to/assets/favicon.ico", url: new URL("file:///z:/path/to/assets/favicon.ico") }],
+		img: [
+			{ id: rid1, url: new URL("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...") },
+			{ id: rid2, url: new URL("https://google.com/logo.svg") },
+		],
+		ico: [{ id: rid3, url: new URL("file:///z:/path/to/assets/favicon.ico") }],
 	}
 
-	const { depsLinked, html } = parseHtmlLinkedDeps(htmlContent, { path: "z:/path/to/pages/index.html" })
-
 	assertEquals(depsLinked, expectedDeps, "the list of linked dependencies does not match expectation")
-	assertEquals(html.includes(`<link ${extra_attributes} res-src-link="${expectedDeps.ico[0].id}">`), true, "a placeholder reference to the linked resource was not added")
-	assertEquals(html.includes(`<img res-src-link="${expectedDeps.img[0].id}">`), true, "a placeholder reference to the linked resource was not added")
+	assertEquals(html.includes(`<link ${extra_attributes} res-src-link="${rid3}">`), true, "a placeholder reference to the linked resource was not added")
+	assertEquals(html.includes(`<img res-src-link="${rid1}">`), true, "a placeholder reference to the linked resource was not added")
+	assertEquals(html.includes(`<img res-src-link="${rid2}">`), true, "a placeholder reference to the linked resource was not added")
 	assertEquals(html.includes(`href=`), false, "the original resource element's source attribute still exists, but it was supposed to be replaced by the `res-src-link` attribute")
 	assertEquals(html.includes(`src=`), false, "the original resource element's source attribute still exists, but it was supposed to be replaced by the `res-src-link` attribute")
 })
@@ -69,7 +90,7 @@ Deno.test("parseHtmlLinkedDeps - No dependencies and DTD tag preservation", () =
 	</body>
 </html>`
 
-	const expectedDeps = { js: [], css: [], img: [], ico: [] }
+	const expectedDeps: HtmlLinkedDependencies = { js: [], css: [], img: [], ico: [] }
 
 	const { depsLinked, html } = parseHtmlLinkedDeps(htmlContent, { path: "/path/to/index.html" })
 
@@ -92,19 +113,23 @@ Deno.test("parseHtmlLinkedDeps - Mixed dependencies", () => {
 	</body>
 </html>`
 
-	const expectedDeps = {
-		js: [{ id: "file:///k:/path/to/app.js", url: new URL("file:///k:/path/to/app.js") }],
-		css: [{ id: "https://cdn.example.com/styles.css", url: new URL("https://cdn.example.com/styles.css") }],
-		img: [{ id: "file:///k:/path/to/logo.png", url: new URL("file:///k:/path/to/logo.png") }],
-		ico: [{ id: "https://example.com/favicon.ico", url: new URL("https://example.com/favicon.ico") }],
+	const { depsLinked, html } = parseHtmlLinkedDeps(htmlContent, { path: "k:/path/to/index.html" })
+	const rid1 = depsLinked.js[0].id
+	const rid2 = depsLinked.css[0].id
+	const rid3 = depsLinked.img[0].id
+	const rid4 = depsLinked.ico[0].id
+
+	const expectedDeps: HtmlLinkedDependencies = {
+		js: [{ id: rid1, url: new URL("file:///k:/path/to/app.js") }],
+		css: [{ id: rid2, url: new URL("https://cdn.example.com/styles.css") }],
+		img: [{ id: rid3, url: new URL("file:///k:/path/to/logo.png") }],
+		ico: [{ id: rid4, url: new URL("https://example.com/favicon.ico") }],
 	}
 
-	const { depsLinked, html } = parseHtmlLinkedDeps(htmlContent, { path: "k:/path/to/index.html" })
-
 	assertEquals(depsLinked, expectedDeps, "the empty list of linked dependencies does not match expectation")
-	assertEquals(html.includes(`<script res-src-link="${expectedDeps.js[0].id}">`), true, "a placeholder reference to the linked resource was not added")
-	assertEquals(html.includes(`<link rel="stylesheet" res-src-link="${expectedDeps.css[0].id}">`), true, "a placeholder reference to the linked resource was not added")
-	assertEquals(html.includes(`<img res-src-link="${expectedDeps.img[0].id}">`), true, "a placeholder reference to the linked resource was not added")
-	assertEquals(html.includes(`<link rel="icon" res-src-link="${expectedDeps.ico[0].id}">`), true, "a placeholder reference to the linked resource was not added")
+	assertEquals(html.includes(`<script res-src-link="${rid1}">`), true, "a placeholder reference to the linked resource was not added")
+	assertEquals(html.includes(`<link rel="stylesheet" res-src-link="${rid2}">`), true, "a placeholder reference to the linked resource was not added")
+	assertEquals(html.includes(`<img res-src-link="${rid3}">`), true, "a placeholder reference to the linked resource was not added")
+	assertEquals(html.includes(`<link rel="icon" res-src-link="${rid4}">`), true, "a placeholder reference to the linked resource was not added")
 	assertEquals(html.startsWith(`<!DOCTYPE html>\n`), true, "the DTD doctype string was not preserved")
 })

@@ -13,12 +13,14 @@ import type { HtmlDependency } from "./typedefs.ts"
 
 export const
 	// the name of the attribute that will carry the information about the resource's unique id
-	resource_element_src_attr = "res-src-link" as const
+	resource_element_src_attr = "res-src-link" as const,
+	// this is the uri scheme that we will use for linked resources' id
+	resource_element_src_uri_scheme = "link://" as const
 
 export interface HtmlDependencyLinked extends HtmlDependency {
 	/** the url of the resource. */
 	url: URL
-	id: this["url"]["href"]
+	id: `${typeof resource_element_src_uri_scheme}${number}`
 }
 
 /** this interface defines the linked (referenced) dependencies of an html file.
@@ -101,6 +103,8 @@ export interface ParsedHtmlLinkedDependencies {
 	depsLinked: HtmlLinkedDependencies
 }
 
+let linked_resource_id_counter = 0
+
 /** returns the linked dependencies of an html file. */
 export const parseHtmlLinkedDeps = (html_content: string, config: parseHtmlLinkedDepsConfig = {}): ParsedHtmlLinkedDependencies => {
 	const
@@ -118,7 +122,7 @@ export const parseHtmlLinkedDeps = (html_content: string, config: parseHtmlLinke
 			const
 				// below, `dir_url` is used as the base path if `elem.getAttribute(attribute)` is a relative link. but if it is absolute, then `html_dir_url` will not be part of the base path.
 				resource_url: URL = resolveAsUrl(elem.getAttribute(attribute)!, dir_url),
-				id: HtmlDependencyLinked["id"] = resource_url.href
+				id: HtmlDependencyLinked["id"] = `${resource_element_src_uri_scheme}${linked_resource_id_counter++}`
 			// we remove the original source link `attribute`, and replace it with our custom `"res-src-link"` attribute.
 			// during the uparsing stage, we will have to do the reverse and set the original `attribute` to the resolved `url` of this dependency.
 			elem.removeAttribute(attribute)
