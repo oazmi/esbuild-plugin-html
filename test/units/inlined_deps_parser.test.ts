@@ -1,5 +1,7 @@
 import { assertEquals } from "jsr:@std/assert"
-import { parseHtmlInlinedDeps } from "../../src/html_deps_parser/inlined_deps_parser.ts"
+import { DOMParser } from "../../src/deps.ts"
+import { stringifyHtmlDocument } from "../../src/html_deps_parser/funcdefs.ts"
+import { parseHtmlInlinedDeps, unparseHtmlInlinedDeps } from "../../src/html_deps_parser/inlined_deps_parser.ts"
 
 
 const text_encoder = new TextEncoder()
@@ -9,7 +11,7 @@ const text_decoder = new TextDecoder()
 Deno.test("parseHtmlInlinedDeps - Inline JavaScript, CSS, and SVG parsing", () => {
 	const htmlContent = `<html>
 	<head>
-        <script type="module" defer="">console.log("Hello World")</script>
+		<script type="module" defer="">console.log("Hello World")</script>
 		<style>body { background-color: #fff; }</style>
 	</head>
 	<body>
@@ -96,4 +98,32 @@ Deno.test("parseHtmlInlinedDeps - No inline dependencies", () => {
 	assertEquals(result.depsInlined.css.length, 0)
 	assertEquals(result.depsInlined.svg.length, 0)
 	assertEquals(result.html.includes("res-src-inline"), false)
+})
+
+// Unit Test 4: Inline JavaScript, CSS, and SVG unparsing
+Deno.test("unparseHtmlInlinedDeps - Inline JavaScript, CSS, and SVG unparsing", () => {
+	const htmlContent = `<html>
+<head>
+	<script type="module" defer="">
+		console.log("Hello World")
+		console.alert("Check your console, NOW!")
+	</script>
+	<style>
+		body { background-color: #fff; }
+		img {
+			max-width: min(100%, 100vw);
+		}
+	</style>
+</head>
+<body>
+	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+		<circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red"></circle>
+	</svg>
+</body>
+</html>`
+
+	const normalized_htmlContent = stringifyHtmlDocument(new DOMParser().parseFromString(htmlContent, "text/html") as any)
+	const { depsInlined, html } = parseHtmlInlinedDeps(htmlContent, { path: "f:/path/to/index.html" })
+	const merged_back_htmlContent = unparseHtmlInlinedDeps(html, depsInlined)
+	assertEquals(merged_back_htmlContent, normalized_htmlContent)
 })

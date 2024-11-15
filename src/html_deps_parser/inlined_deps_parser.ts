@@ -110,7 +110,9 @@ export interface ParsedHtmlInlinedDependencies {
 	depsInlined: HtmlInlinedDependencies
 }
 
-const text_encoder = new TextEncoder()
+const
+	text_encoder = new TextEncoder(),
+	text_decoder = new TextDecoder()
 let inlined_resource_id_counter = 0
 
 /** returns the inlined dependencies of an html file. */
@@ -143,5 +145,23 @@ export const parseHtmlInlinedDeps = (html_content: string, config: parseHtmlInli
 	}
 }
 
-// TODO: implement `unparseHtmlInlinedDeps`, which should place back the dependencies specified in a `ParsedHtmlInlinedDependencies` to the contents of an html file
+// DONE: implement `unparseHtmlInlinedDeps`, which should place back the dependencies specified in a `ParsedHtmlInlinedDependencies` to the contents of an html file
+/** merges inline dependency resources back into an html file's contents, and returns it back. */
+export const unparseHtmlInlinedDeps = (html_content: ParsedHtmlInlinedDependencies["html"], inlined_deps: ParsedHtmlInlinedDependencies["depsInlined"]): string => {
+	const doc = new DOMParser().parseFromString(html_content, "text/html")
 
+	for (const [dep_type_key, all_deps_of_a_certain_type] of object_entries(inlined_deps) as Array<[keyof typeof inlined_deps, Array<HtmlDependencyInlined>]>) {
+		for (const inlined_dep of all_deps_of_a_certain_type) {
+			const
+				{ content, id } = inlined_dep,
+				resource_content = typeof content === "string" ? content : text_decoder.decode(content),
+				selector = `*\[${resource_element_src_attr}=\"${id}\"\]`,
+				elem = doc.querySelector(selector)
+			if (!elem) { throw new Error(`did not find inlined resource id: "${id}" in the provided html content`) }
+			elem.removeAttribute(resource_element_src_attr)
+			elem.innerHTML = resource_content
+		}
+	}
+
+	return stringifyHtmlDocument(doc as any)
+}
