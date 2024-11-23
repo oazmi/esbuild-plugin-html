@@ -1,5 +1,20 @@
-import { isArray, isString, object_entries, object_fromEntries, promise_all, resolveAsUrl, resolvePath, type esbuild } from "./deps.ts"
+import { isArray, isString, json_parse, json_stringify, object_entries, object_fromEntries, promise_all, resolveAsUrl, resolvePath, type esbuild } from "./deps.ts"
 
+
+const
+	escape_regex_chars_regex = /[.*+?^${}()|[\]\\]/g,
+	escape_regex_for_string_raw = /[\$\`]/g
+
+export const
+	escapeString = json_stringify,
+	unescapeString = json_parse,
+	escapeStringForRegex = (str: string) => (str.replaceAll(escape_regex_chars_regex, "\\$&")),
+	stringToJsEvalString = (str: string) => ("String.raw\`" + str.replaceAll(escape_regex_for_string_raw, "\\$&") + "\`")
+
+/** convert a string to a regex pattern that only matches the given string literal.  */
+export const stringLiteralToRegex = (str: string): RegExp => {
+	return new RegExp("^" + escapeStringForRegex(str) + "$")
+}
 
 /** infer the directory path of some file as a url.
  * if no path to a file is provided, then the url of the current working directory will be given.
