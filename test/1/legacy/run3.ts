@@ -2,8 +2,8 @@ import { denoPlugins } from "jsr:@luca/esbuild-deno-loader@0.11.0"
 import htmlPlugin from "npm:@chialab/esbuild-plugin-html"
 import { Build } from "npm:@chialab/esbuild-rna"
 import esbuild from "npm:esbuild"
-import { resolveAsUrl, resolvePath } from "../../src/deps.ts"
-// import { htmlPlugin } from "../../src/plugin.ts"
+import { resolveAsUrl, resolvePath } from "../../../src/deps.ts"
+// import { htmlPlugin } from "../../../src/plugin.ts"
 
 
 const

@@ -1,8 +1,8 @@
 import { denoPlugins } from "jsr:@luca/esbuild-deno-loader@0.11.0"
 import { cssPlugin } from "jsr:@oazmi/esbuild-plugin-css@0.1.2"
 import esbuild from "npm:esbuild"
-import { resolveAsUrl, resolvePath } from "../../src/deps.ts"
-import { htmlPlugin } from "../../src/plugin.ts"
+import { resolveAsUrl, resolvePath } from "../../../src/deps.ts"
+import { htmlPlugin } from "../../../src/legacy/plugin.ts"
 
 
 const
