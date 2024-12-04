@@ -1,6 +1,6 @@
-import { esbuild, isAbsolutePath, resolveAsUrl, resolvePath } from "./deps.ts"
-import { predictEsbuildOutputPaths } from "./funcdefs.ts"
-import { type HtmlDependencyLinked, parseHtmlLinkedDeps, unparseHtmlLinkedDeps } from "./html_deps_parser/linked_deps_parser.ts"
+import { type esbuild, isAbsolutePath, resolveAsUrl, resolvePath } from "../deps.ts"
+import { predictEsbuildOutputPaths } from "../funcdefs.ts"
+import { type HtmlDependencyLinked, parseHtmlLinkedDeps, unparseHtmlLinkedDeps } from "../html_deps_parser/linked_deps_parser.ts"
 
 
 const plugin_namespace = "oazmi-html"
