@@ -4,10 +4,9 @@
  * @module
 */
 
-import { DOMParser, object_entries } from "../deps.ts"
-import { getDirUrlFromFile } from "../funcdefs.ts"
-import type { AbsolutePath } from "../typedefs.ts"
-import { stringifyHtmlDocument } from "./funcdefs.ts"
+import { DOMParser, object_entries } from "../../src/deps.ts"
+import { getDirUrlFromFile, stringifyHtmlDocument } from "../../src/funcdefs.ts"
+import type { AbsolutePath } from "../../src/typedefs.ts"
 import type { HtmlDependency } from "./typedefs.ts"
 
 

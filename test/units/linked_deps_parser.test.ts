@@ -1,7 +1,7 @@
 import { assertEquals } from "jsr:@std/assert"
 import { DOMParser } from "../../src/deps.ts"
-import { stringifyHtmlDocument } from "../../src/html_deps_parser/funcdefs.ts"
-import { parseHtmlLinkedDeps, unparseHtmlLinkedDeps, type HtmlLinkedDependencies } from "../../src/html_deps_parser/linked_deps_parser.ts"
+import { stringifyHtmlDocument } from "../../src/funcdefs.ts"
+import { parseHtmlLinkedDeps, unparseHtmlLinkedDeps, type HtmlLinkedDependencies } from "../../extra/html_deps_parser/linked_deps_parser.ts"
 
 
 // Unit Test 1: Parsing relative and absolute JS dependencies

@@ -3,8 +3,8 @@ import { cssPlugin } from "jsr:@oazmi/esbuild-plugin-css@0.1.2"
 import esbuild from "npm:esbuild"
 import { resolveAsUrl, resolvePath } from "../../src/deps.ts"
 import { predictEsbuildOutputPath, predictEsbuildOutputPaths } from "../../src/funcdefs.ts"
-import { parseHtmlInlinedDeps } from "../../src/html_deps_parser/inlined_deps_parser.ts"
-import { parseHtmlLinkedDeps } from "../../src/html_deps_parser/linked_deps_parser.ts"
+import { parseHtmlInlinedDeps } from "../../extra/html_deps_parser/inlined_deps_parser.ts"
+import { parseHtmlLinkedDeps } from "../../extra/html_deps_parser/linked_deps_parser.ts"
 
 
 const
