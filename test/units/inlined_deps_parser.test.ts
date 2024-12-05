@@ -1,11 +1,8 @@
 import { assertEquals } from "jsr:@std/assert"
-import { DOMParser } from "../../src/deps.ts"
-import { stringifyHtmlDocument } from "../../src/html_deps_parser/funcdefs.ts"
-import { parseHtmlInlinedDeps, unparseHtmlInlinedDeps } from "../../src/html_deps_parser/inlined_deps_parser.ts"
+import { DOMParser, textDecoder } from "../../src/deps.ts"
+import { stringifyHtmlDocument } from "../../src/funcdefs.ts"
+import { parseHtmlInlinedDeps, unparseHtmlInlinedDeps } from "../../extra/html_deps_parser/inlined_deps_parser.ts"
 
-
-const text_encoder = new TextEncoder()
-const text_decoder = new TextDecoder()
 
 // Unit Test 1: Inline JavaScript, CSS, and SVG parsing
 Deno.test("parseHtmlInlinedDeps - Inline JavaScript, CSS, and SVG parsing", () => {
@@ -27,13 +24,13 @@ Deno.test("parseHtmlInlinedDeps - Inline JavaScript, CSS, and SVG parsing", () =
 	const rid3 = depsInlined.svg[0].id
 
 	assertEquals(depsInlined.js.length, 1)
-	assertEquals(text_decoder.decode(depsInlined.js[0].content).trim(), `console.log("Hello World")`)
+	assertEquals(textDecoder.decode(depsInlined.js[0].content).trim(), `console.log("Hello World")`)
 	assertEquals(depsInlined.js[0].path, new URL("file:///f:/path/to/"))
 	assertEquals(depsInlined.css.length, 1)
-	assertEquals(text_decoder.decode(depsInlined.css[0].content).trim(), `body { background-color: #fff; }`)
+	assertEquals(textDecoder.decode(depsInlined.css[0].content).trim(), `body { background-color: #fff; }`)
 	assertEquals(depsInlined.css[0].path, new URL("file:///f:/path/to/"))
 	assertEquals(depsInlined.svg.length, 1)
-	assertEquals(text_decoder.decode(depsInlined.svg[0].content).trim(), `<circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red"></circle>`)
+	assertEquals(textDecoder.decode(depsInlined.svg[0].content).trim(), `<circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red"></circle>`)
 	assertEquals(depsInlined.svg[0].path, new URL("file:///f:/path/to/"))
 	assertEquals(rid1.startsWith("inline://"), true)
 	assertEquals(rid2.startsWith("inline://"), true)
@@ -70,10 +67,10 @@ Deno.test("parseHtmlInlinedDeps - Empty inline content and DTD tag preservation"
 	const rid2 = depsInlined.css[0].id
 
 	assertEquals(depsInlined.js.length, 1)
-	assertEquals(text_decoder.decode(depsInlined.js[0].content), "")
+	assertEquals(textDecoder.decode(depsInlined.js[0].content), "")
 	assertEquals(depsInlined.js[0].path, new URL("jsr:/@scope/lib@0.1.0/path/to/"))
 	assertEquals(depsInlined.css.length, 1)
-	assertEquals(text_decoder.decode(depsInlined.css[0].content), "")
+	assertEquals(textDecoder.decode(depsInlined.css[0].content), "")
 	assertEquals(depsInlined.css[0].path, new URL("jsr:/@scope/lib@0.1.0/path/to/"))
 	assertEquals(html.includes(`<script res-src-inline="${rid1}"></script>`), true)
 	assertEquals(html.includes(`<style res-src-inline="${rid2}"></style>`), true)

@@ -1,5 +1,5 @@
 import { DEBUG, DOMParser, GenericLoader, object_entries, textEncoder, zipArrays, type ContentDependencies, type GenericLoaderConfig } from "./deps.ts"
-import { stringifyHtmlDocument } from "./html_deps_parser/funcdefs.ts"
+import { stringifyHtmlDocument } from "./funcdefs.ts"
 
 
 /** a descriptor of which html elements to select and extract their linked resource's url or pathname. */
